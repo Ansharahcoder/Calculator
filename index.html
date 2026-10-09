@@ -1,49 +1,116 @@
 <!DOCTYPE html>
-<html lang="ur">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Calculator</title>
+    <title>Dual-Mode Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-</head>
-<body>
 
-    <div class="calculator">
-        <!-- Display Screen -->
-        <div class="display">
-            <div id="previous-op" class="previous-op"></div>
-            <div id="current-op" class="current-op">0</div>
+  
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="glass-container w-full max-w-[380px] sm:max-w-[420px] rounded-3xl p-5 sm:p-6 text-white flex flex-col gap-4 relative">
+        
+        <!-- Header & Mode Switcher -->
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <div class="flex bg-slate-900/80 p-1 rounded-xl border border-white/10 text-xs font-medium">
+                <button id="mode-std" onclick="switchMode('std')" class="px-3 py-1.5 rounded-lg transition-all duration-200 bg-indigo-600 text-white shadow-md">
+                    Standard
+                </button>
+                <button id="mode-sci" onclick="switchMode('sci')" class="px-3 py-1.5 rounded-lg transition-all duration-200 text-slate-400 hover:text-white">
+                    Scientific
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- Angle Mode Toggle (Deg/Rad) -->
+                <button id="deg-rad-btn" onclick="toggleDegRad()" class="hidden text-xs font-semibold px-2 py-1 bg-slate-800 border border-slate-700 rounded-md text-amber-400 hover:bg-slate-700 transition">
+                    DEG
+                </button>
+                <button onclick="clearHistory()" title="Clear Memory" class="text-xs text-slate-400 hover:text-rose-400 transition p-1">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
         </div>
 
-        <!-- Calculator Buttons -->
-        <div class="buttons">
-            <button class="btn clear" onclick="clearDisplay()">AC</button>
-            <button class="btn action" onclick="deleteLast()">DEL</button>
-            <button class="btn operator" onclick="appendOperator('%')">%</button>
-            <button class="btn operator" onclick="appendOperator('/')">÷</button>
+        <!-- Display Area -->
+        <div class="bg-slate-950/80 border border-white/10 rounded-2xl p-4 flex flex-col justify-between min-h-[110px] shadow-inner">
+            <!-- Equation History Line -->
+            <div id="history-display" class="display-font text-right text-xs sm:text-sm text-indigo-300/70 overflow-x-auto whitespace-nowrap custom-scroll min-h-[20px]">
+                0
+            </div>
+            <!-- Current Output / Main Line -->
+            <div id="main-display" class="display-font text-right text-2xl sm:text-3xl font-bold tracking-wider text-white overflow-x-auto whitespace-nowrap custom-scroll">
+                0
+            </div>
+        </div>
 
-            <button class="btn" onclick="appendNumber('7')">7</button>
-            <button class="btn" onclick="appendNumber('8')">8</button>
-            <button class="btn" onclick="appendNumber('9')">9</button>
-            <button class="btn operator" onclick="appendOperator('*')">×</button>
+        <!-- Keypad Grid Container -->
+        <div class="flex flex-col gap-2.5">
+            
+            <!-- Scientific Secondary Row Keys (Shown only in Scientific Mode) -->
+            <div id="sci-keys-extra" class="hidden grid-cols-5 gap-2 transition-all duration-300">
+                <button onclick="appendFunc('sin')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">sin</button>
+                <button onclick="appendFunc('cos')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">cos</button>
+                <button onclick="appendFunc('tan')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">tan</button>
+                <button onclick="appendFunc('log')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">log</button>
+                <button onclick="appendFunc('ln')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">ln</button>
 
-            <button class="btn" onclick="appendNumber('4')">4</button>
-            <button class="btn" onclick="appendNumber('5')">5</button>
-            <button class="btn" onclick="appendNumber('6')">6</button>
-            <button class="btn operator" onclick="appendOperator('-')">-</button>
+                <button onclick="appendValue('(')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">(</button>
+                <button onclick="appendValue(')')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">)</button>
+                <button onclick="appendValue('^')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">x^y</button>
+                <button onclick="appendFunc('sqrt')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">√</button>
+                <button onclick="appendValue('!')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">n!</button>
 
-            <button class="btn" onclick="appendNumber('1')">1</button>
-            <button class="btn" onclick="appendNumber('2')">2</button>
-            <button class="btn" onclick="appendNumber('3')">3</button>
-            <button class="btn operator" onclick="appendOperator('+')">+</button>
+                <button onclick="appendValue('π')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-amber-300 rounded-xl py-2 text-xs font-semibold border border-white/5">π</button>
+                <button onclick="appendValue('e')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-amber-300 rounded-xl py-2 text-xs font-semibold border border-white/5">e</button>
+                <button onclick="appendFunc('sq')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">x²</button>
+                <button onclick="appendFunc('inv')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-blue-300 rounded-xl py-2 text-xs font-semibold border border-white/5">1/x</button>
+                <button onclick="appendValue('%')" class="calc-btn btn-sci bg-slate-800/90 hover:bg-slate-700/90 text-purple-300 rounded-xl py-2 text-xs font-semibold border border-white/5">%</button>
+            </div>
 
-            <button class="btn" onclick="appendNumber('0')">0</button>
-            <button class="btn" onclick="appendNumber('00')">00</button>
-            <button class="btn" onclick="appendNumber('.')">.</button>
-            <button class="btn equal" onclick="calculate()">=</button>
+            <!-- Standard Main Keypad Grid -->
+            <div class="grid grid-cols-4 gap-2.5">
+                <!-- Row 1 -->
+                <button onclick="clearAll()" class="calc-btn bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-semibold rounded-2xl py-3 text-sm border border-rose-500/30">AC</button>
+                <button onclick="backspace()" class="calc-btn bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl py-3 text-sm border border-white/5">
+                    <i class="fa-solid fa-backspace"></i>
+                </button>
+                <button onclick="toggleSign()" class="calc-btn bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl py-3 text-sm border border-white/5">+/-</button>
+                <button onclick="appendValue('/')" class="calc-btn btn-op bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold rounded-2xl py-3 text-base border border-indigo-400/30">÷</button>
+
+                <!-- Row 2 -->
+                <button onclick="appendValue('7')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">7</button>
+                <button onclick="appendValue('8')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">8</button>
+                <button onclick="appendValue('9')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">9</button>
+                <button onclick="appendValue('*')" class="calc-btn btn-op bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold rounded-2xl py-3.5 text-base border border-indigo-400/30">×</button>
+
+                <!-- Row 3 -->
+                <button onclick="appendValue('4')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">4</button>
+                <button onclick="appendValue('5')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">5</button>
+                <button onclick="appendValue('6')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">6</button>
+                <button onclick="appendValue('-')" class="calc-btn btn-op bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold rounded-2xl py-3.5 text-base border border-indigo-400/30">−</button>
+
+                <!-- Row 4 -->
+                <button onclick="appendValue('1')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">1</button>
+                <button onclick="appendValue('2')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">2</button>
+                <button onclick="appendValue('3')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">3</button>
+                <button onclick="appendValue('+')" class="calc-btn btn-op bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold rounded-2xl py-3.5 text-base border border-indigo-400/30">+</button>
+
+                <!-- Row 5 -->
+                <button onclick="appendValue('0')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5 col-span-2">0</button>
+                <button onclick="appendValue('.')" class="calc-btn btn-num bg-slate-800/60 hover:bg-slate-700/60 text-white font-medium rounded-2xl py-3.5 text-base border border-white/5">.</button>
+                <button onclick="calculate()" class="calc-btn bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold rounded-2xl py-3.5 text-lg shadow-lg shadow-indigo-600/30 border border-indigo-400/30">=</button>
+            </div>
         </div>
     </div>
+<script src="script.js"></script>
 
-    <script src="script.js"></script>
+      
+
 </body>
 </html>
